@@ -79,6 +79,9 @@ void setup()
 	server.connectRequestHandle("/", handleRoot);
 	server.connectNotFoundHandle(handleNotFound);
 
+	server.startMDNS();
+	server.startServer();
+
 	tCheckWifi.enable();
 
 }

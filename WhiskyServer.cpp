@@ -1,13 +1,14 @@
 #include "WhiskyServer.h"
 
-WhiskyServer::WhiskyServer(const String& ssid, const String& pswd, int port, Task* errorBlink) :
+WhiskyServer::WhiskyServer(const String& ssid, const String& pswd, int port, Task* errorBlink, Task* busyBlink) :
 	m_wifiSSID(ssid),
 	m_wifiPassword(pswd),
 	m_deviceName("WhiskyOne"),
 	m_httpServer(port),
 	m_firstConnect(true),
 	m_wifiLost(false),
-	m_tErrorBlink(errorBlink)
+	m_tErrorBlink(errorBlink),
+	m_tBusyBlink(busyBlink)
 {
 }
 
@@ -41,6 +42,10 @@ void WhiskyServer::startMDNS(String name)
 
 	if (MDNS.begin(this->m_deviceName.c_str())) {
 		this->toSerial("MDNS responder started");
+	}
+	else
+	{
+		this->toSerial("MDNS responder failed to started");
 	}
 }
 
@@ -93,7 +98,6 @@ void WhiskyServer::checkWiFi()
 			this->toSerial(con.c_str());
 
 			this->m_tErrorBlink->disable();
-			this->startMDNS();
 			this->m_firstConnect = false;
 		}
 		else if (this->m_tErrorBlink->isEnabled())
