@@ -10,6 +10,7 @@
 //
 // global includes
 #include "Includes.h"
+#include "Credentials.h"
 
 #include "WhiskyStatusLED.h"
 #include "WhiskyServer.h"

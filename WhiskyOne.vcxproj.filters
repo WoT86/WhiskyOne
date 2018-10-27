@@ -30,6 +30,9 @@
     <ClInclude Include="WhiskyServer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Credentials.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="WhiskyStatusLED.cpp">

@@ -107,6 +107,7 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Credentials.h" />
     <ClInclude Include="Includes.h" />
     <ClInclude Include="WhiskyServer.h" />
     <ClInclude Include="WhiskyStatusLED.h" />
