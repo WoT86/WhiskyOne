@@ -93,6 +93,8 @@ void WhiskyServer::checkWiFi()
 			this->toSerial(con.c_str());
 
 			this->m_tErrorBlink->disable();
+			this->startMDNS();
+			this->m_firstConnect = false;
 		}
 		else if (this->m_tErrorBlink->isEnabled())
 		{

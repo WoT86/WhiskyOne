@@ -73,7 +73,7 @@ void setup()
 	attachInterrupt(PIN_ROTENC_DT, checkEncoder, CHANGE);
 
 	server.startWiFi();
-	server.startMDNS();
+	//server.startMDNS();
 
 	// Define HTTP Callbacks via callbacks
 	server.connectRequestHandle("/", handleRoot);

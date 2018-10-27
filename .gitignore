@@ -262,3 +262,6 @@ __pycache__/
 
 # Credentials by WoT
 Credentials.h
+
+#visual micro 
+__vm/
