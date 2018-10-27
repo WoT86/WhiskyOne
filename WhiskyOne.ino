@@ -1,9 +1,9 @@
 // Visual Micro is in vMicro>General>Tutorial Mode
 // 
 /*
-    Name:       WhiskyOne.ino
-    Created:	17.10.2018 20:13:24
-    Author:     WOT-PC\WoT
+	Name:       WhiskyOne.ino
+	Created:	17.10.2018 20:13:24
+	Author:     WOT-PC\WoT
 */
 
 // Define User Types below here or use a .h file
@@ -12,6 +12,7 @@
 #include "Includes.h"
 
 #include "WhiskyStatusLED.h"
+#include "WhiskyServer.h"
 
 #include <TaskSchedulerDeclarations.h>
 #include <TaskScheduler.h>
@@ -20,11 +21,6 @@
 
 #include <Rotary.h>
 #include <OneButton.h>
-
-#include <ESP8266WebServer.h>
-#include <ESP8266mDNS.h>
-#include <ESP8266WiFi.h>
-
 
 // Define Function Prototypes that use User Types below here or use a .h file
 //
@@ -39,20 +35,18 @@ byte ledStripBrightness = DEFAULT_LEDSTRIP_BRIGHTNESS;
 Rotary encoder(PIN_ROTENC_CLK, PIN_ROTENC_DT);
 OneButton encoderButton(PIN_ROTENC_SW, true);
 
-const char* ssid = "........";
-const char* password = "........";
-
-ESP8266WebServer server(80);
-
-
 // Non blocking Tasker
 Scheduler tasker;
 
-// Define Tasks with lambda function callbacks
+// Define LED Tasks with lambda function callbacks
 Task tErrorBlink(500, TASK_FOREVER, []() {errorLED.toggle(); }, &tasker, false, NULL, []() {errorLED.turnOFF(); });
 Task tBusyBlink(500, TASK_FOREVER, []() {busyLED.toggle(); }, &tasker, false, NULL, []() {busyLED.turnOFF(); });
 
-Task tCheckWifi(10000, TASK_FOREVER, &CheckWiFiStatus, &tasker);
+// Class handles HTTP, MDNS and WIFI
+WhiskyServer server(WIFI_SSID, WIFI_PASSWORD, 80, &tErrorBlink);
+
+// Define WIFI Tasks with lambda function callbacks
+Task tCheckWifi(10000, TASK_FOREVER, []() {server.checkWiFi(); }, &tasker);
 
 #pragma endregion
 
@@ -71,34 +65,11 @@ void setup()
 	attachInterrupt(PIN_ROTENC_CLK, checkEncoder, CHANGE);
 	attachInterrupt(PIN_ROTENC_DT, checkEncoder, CHANGE);
 
-	Serial.print("Connecting to WiFi...");
-	WiFi.mode(WIFI_STA);
-	WiFi.begin(ssid, password);
+	server.startWiFi();
+	server.startMDNS();
 
-	// Wait for connection
-	while (WiFi.status() != WL_CONNECTED) {
-		errorLED.toggle();
-		delay(500);
-		errorLED.toggle();
-		Serial.print(".");
-	}
+	// Define HTTP Callbacks via lambda callbacks
 
-	Serial.println("");
-	Serial.print("Connected to ");
-	Serial.println(ssid);
-	Serial.print("IP address: ");
-	Serial.println(WiFi.localIP());
-
-	if (MDNS.begin("WhiskyOne")) {
-		Serial.println("MDNS responder started");
-	}
-
-	server.on("/", handleRoot);
-
-	server.onNotFound(handleNotFound);
-
-	server.begin();
-	Serial.println("HTTP server started");
 
 	tCheckWifi.enable();
 
@@ -108,30 +79,8 @@ void setup()
 void loop()
 {
 	tasker.execute();
-	server.handleClient();
+	server.loop();
 	encoderButton.tick();
-}
-
-void CheckWiFiStatus()
-{
-	if (WiFi.status() != WL_CONNECTED)
-	{
-		if (!tErrorBlink.isEnabled())
-		{
-			Serial.println("Connection to WiFi lost!");
-			tErrorBlink.enable();
-		}
-		
-	}
-	else
-	{ 
-		if (tErrorBlink.isEnabled())
-		{
-			Serial.println("Connection to WiFi reestablished!");
-			tErrorBlink.disable();
-		}
-	}
-		
 }
 
 #pragma region Peripherals
