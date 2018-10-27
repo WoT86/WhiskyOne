@@ -19,8 +19,14 @@
 
 #include <FastLED.h>
 
+#include <ESP8266WiFi.h>
+#include <ESP8266mDNS.h>
+#include <ESP8266WebServer.h>
+
 #include <Rotary.h>
 #include <OneButton.h>
+
+
 
 // Define Function Prototypes that use User Types below here or use a .h file
 //
@@ -68,8 +74,9 @@ void setup()
 	server.startWiFi();
 	server.startMDNS();
 
-	// Define HTTP Callbacks via lambda callbacks
-
+	// Define HTTP Callbacks via callbacks
+	server.connectRequestHandle("/", handleRoot);
+	server.connectNotFoundHandle(handleNotFound);
 
 	tCheckWifi.enable();
 
@@ -112,7 +119,7 @@ void buttonLongPress()
 #pragma region Server Handles
 void handleRoot() {
 	busyLED.toggle();
-	server.send(200, "text/plain", "WhiskyOne - Toggle Strip");
+	server.server()->send(200, "text/plain", "WhiskyOne - Toggle Strip");
 	busyLED.toggle();
 }
 
@@ -120,16 +127,16 @@ void handleNotFound() {
 	busyLED.toggle();
 	String message = "File Not Found\n\n";
 	message += "URI: ";
-	message += server.uri();
+	message += server.server()->uri();
 	message += "\nMethod: ";
-	message += (server.method() == HTTP_GET) ? "GET" : "POST";
+	message += (server.server()->method() == HTTP_GET) ? "GET" : "POST";
 	message += "\nArguments: ";
-	message += server.args();
+	message += server.server()->args();
 	message += "\n";
-	for (uint8_t i = 0; i < server.args(); i++) {
-		message += " " + server.argName(i) + ": " + server.arg(i) + "\n";
+	for (uint8_t i = 0; i < server.server()->args(); i++) {
+		message += " " + server.server()->argName(i) + ": " + server.server()->arg(i) + "\n";
 	}
-	server.send(404, "text/plain", message);
+	server.server()->send(404, "text/plain", message);
 	busyLED.toggle();
 }
 #pragma endregion

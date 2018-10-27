@@ -7,7 +7,6 @@
 #include <ESP8266WiFi.h>
 
 #include <TaskSchedulerDeclarations.h>
-#include <TaskScheduler.h>
 
 class WhiskyServer
 {
@@ -24,6 +23,9 @@ public:
 	void startServer();
 	void checkWiFi();
 	void loop();
+
+	//really dirty but quick
+	ESP8266WebServer* server();
 
 protected:
 	String m_wifiSSID;

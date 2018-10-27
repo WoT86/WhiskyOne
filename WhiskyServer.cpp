@@ -34,7 +34,7 @@ void WhiskyServer::startWiFi(String ssid, String pswd)
 
 void WhiskyServer::startMDNS(String name)
 {
-	if (name.length > 0)
+	if (name.length() > 0)
 	{
 		this->m_deviceName = name;
 	}
@@ -105,6 +105,11 @@ void WhiskyServer::checkWiFi()
 void WhiskyServer::loop()
 {
 	this->m_httpServer.handleClient();
+}
+
+ESP8266WebServer * WhiskyServer::server()
+{
+	return &this->m_httpServer;
 }
 
 void WhiskyServer::toSerial(const char * str)
