@@ -109,11 +109,13 @@
   <ItemGroup>
     <ClInclude Include="Credentials.h" />
     <ClInclude Include="Includes.h" />
+    <ClInclude Include="WhiskyLEDStripe.h" />
     <ClInclude Include="WhiskyServer.h" />
     <ClInclude Include="WhiskyStatusLED.h" />
     <ClInclude Include="__vm\.WhiskyOne.vsarduino.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="WhiskyLEDStripe.cpp" />
     <ClCompile Include="WhiskyServer.cpp" />
     <ClCompile Include="WhiskyStatusLED.cpp" />
   </ItemGroup>

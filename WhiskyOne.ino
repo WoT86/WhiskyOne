@@ -9,6 +9,7 @@
 // Define User Types below here or use a .h file
 //
 // global includes
+#include "WhiskyLEDStripe.h"
 #include "Includes.h"
 #include "Credentials.h"
 
@@ -17,8 +18,6 @@
 
 #include <TaskSchedulerDeclarations.h>
 #include <TaskScheduler.h>
-
-#include <FastLED.h>
 
 #include <ESP8266WiFi.h>
 #include <ESP8266mDNS.h>
@@ -37,7 +36,7 @@
 WhiskyStatusLED errorLED(PIN_ERROR_LED);
 WhiskyStatusLED busyLED(PIN_BUSY_LED);
 
-byte ledStripBrightness = DEFAULT_LEDSTRIP_BRIGHTNESS;
+byte ledStripBrightness = DEFAULT_LEDSTRIPE_BRIGHTNESS;
 
 Rotary encoder(PIN_ROTENC_CLK, PIN_ROTENC_DT);
 OneButton encoderButton(PIN_ROTENC_SW, true);
@@ -66,8 +65,8 @@ void setup()
 	errorLED.init();
 	busyLED.init();
 
-	pinMode(PIN_LEDSTRIP_DATA, OUTPUT);
-	digitalWrite(PIN_LEDSTRIP_DATA, 0);
+	pinMode(PIN_LEDSTRIPE_DATA, OUTPUT);
+	digitalWrite(PIN_LEDSTRIPE_DATA, 0);
 
 	attachInterrupt(PIN_ROTENC_CLK, checkEncoder, CHANGE);
 	attachInterrupt(PIN_ROTENC_DT, checkEncoder, CHANGE);
@@ -115,7 +114,7 @@ void buttonClicked()
 
 void buttonLongPress()
 {
-	ledStripBrightness = DEFAULT_LEDSTRIP_BRIGHTNESS;
+	ledStripBrightness = DEFAULT_LEDSTRIPE_BRIGHTNESS;
 	Serial.println("Reset Position");
 }
 #pragma endregion
