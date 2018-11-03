@@ -38,6 +38,9 @@ class WhiskyLEDStripe
 	void fullStripeHSV(CHSV color);
 
 	void setBrightness(byte bright);
+	void toggle();
+
+	bool isOn();
 
 	void update();
 
@@ -45,6 +48,7 @@ protected:
 	CRGB*			m_LEDs;
 	const PIN		m_dataPIN;
 	bool			m_isReady;
+	uint8_t			m_currBrightness;
 
 	uint16_t m_LEDCount;
 };

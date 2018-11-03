@@ -13,6 +13,6 @@
 #define PIN_LEDSTRIPE_DATA 5
 
 // global definitions
-#define LEDSTRIP_LED_COUNT 23
+#define LEDSTRIPE_LED_COUNT 23
 
 #define DEFAULT_LEDSTRIPE_BRIGHTNESS 128
