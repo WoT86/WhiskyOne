@@ -38,7 +38,11 @@
 
 #pragma region global vars
 
-byte ledStripBrightness = 0;
+CHSV currRotaryColor = CHSV(35, 255, 255);
+CRGB currWifiColor = CRGB::OrangeRed;
+volatile byte rotaryPosition = DEFAULT_LEDSTRIPE_BRIGHTNESS;
+byte currBrightness = rotaryPosition;
+byte rotaryMenu = 0;
 
 WhiskyStatusLED errorLED(PIN_ERROR_LED);
 WhiskyStatusLED busyLED(PIN_BUSY_LED);
@@ -74,22 +78,25 @@ void setup()
 	busyLED.init();
 
 	pinMode(PIN_LEDSTRIPE_DATA, OUTPUT);
-	digitalWrite(PIN_LEDSTRIPE_DATA, 0);
+	digitalWrite(PIN_LEDSTRIPE_DATA, LOW);
 
 	attachInterrupt(PIN_ROTENC_CLK, checkEncoder, CHANGE);
 	attachInterrupt(PIN_ROTENC_DT, checkEncoder, CHANGE);
 
 	stripe.init();
 	stripe.fullStripeRGB(CRGB::OrangeRed);
+	stripe.setBrightness(rotaryPosition);
 
 	server.startWiFi();
 
 	// Define HTTP Callbacks via callbacks
 	server.connectRequestHandle("/", handleRoot);
+	server.connectRequestHandle("/fullStripe", handelFullStripe);
 	server.connectNotFoundHandle(handleNotFound);
 
-	server.startMDNS();
-	server.startServer();
+	//Encoder Button Callbacks
+	encoderButton.attachClick(buttonClicked);
+	encoderButton.attachLongPressStop(buttonLongPress);
 
 	tCheckWifi.enable();
 
@@ -102,34 +109,100 @@ void loop()
 	tasker.execute();
 	server.loop();
 	encoderButton.tick();
+	updateMenu();
 }
 
 #pragma region Peripherals
 void checkEncoder()
 {
 	unsigned char result = encoder.process();
-	if (result == DIR_CW) {
-		ledStripBrightness++;
-		stripe.setBrightness(ledStripBrightness);
-		Serial.println(ledStripBrightness);
+	if (result == DIR_CW) {	
+		if(rotaryPosition < 255)
+			rotaryPosition++;
+		Serial.println(String("Rotary Encoder turned CW to " + String(rotaryPosition)));
 	}
 	else if (result == DIR_CCW) {
-		ledStripBrightness--;
-		stripe.setBrightness(ledStripBrightness);
-		Serial.println(ledStripBrightness);
+		if(rotaryPosition > 0)
+			rotaryPosition--;
+		Serial.println(String("Rotary Encoder turned CCW to " + String(rotaryPosition)));
+	}
+}
+
+void updateMenu()
+{
+	switch (rotaryMenu)
+	{
+	case 0:	
+		if (currBrightness != rotaryPosition)
+		{
+			Serial.println("Rotary Encoder turned CCW Brightness");
+			currBrightness = rotaryPosition;
+			stripe.setBrightness(rotaryPosition);
+		}	
+		break;
+	case 1:
+		if (currRotaryColor.h != rotaryPosition)
+		{
+			Serial.println("Rotary Encoder turned CCW Hue");
+			currRotaryColor.h = rotaryPosition;
+			stripe.fullStripeHSV(currRotaryColor);
+		}
+		break;
+	case 2:
+		if (currRotaryColor.s != rotaryPosition)
+		{
+			Serial.println("Rotary Encoder turned CCW Sat");
+			currRotaryColor.s = rotaryPosition;
+			stripe.fullStripeHSV(currRotaryColor);
+		}
+		break;
+	case 3:	
+		if (currRotaryColor.v != rotaryPosition)
+		{
+			Serial.println("Rotary Encoder turned CCW Val");
+			currRotaryColor.v = rotaryPosition;
+			stripe.fullStripeHSV(currRotaryColor);
+		}
+		break;
 	}
 }
 
 void buttonClicked()
 {
-	Serial.println("Click");
+	Serial.println("Rotary Encoder clicked");
+	// rolling menu for brightness, hue, saturation and value
+	
+	switch (rotaryMenu)
+	{
+	case 0:
+		currBrightness = rotaryPosition;
+		// set HSV Rotary Color
+		stripe.fullStripeHSV(currRotaryColor);
+		rotaryPosition = currRotaryColor.h;
+		rotaryMenu++;
+		break;
+	case 1:
+		rotaryPosition = currRotaryColor.s;
+		rotaryMenu++;
+		break;
+	case 2:
+		rotaryMenu++;
+		rotaryPosition = currRotaryColor.v;
+		break;
+	default:
+		rotaryMenu = 0;
+		// change to Wifi color
+		// HSV Rotary is stored as global
+		stripe.fullStripeRGB(currWifiColor);
+		rotaryPosition = currBrightness;
+		break;
+	}
 }
 
 void buttonLongPress()
 {
-	ledStripBrightness = DEFAULT_LEDSTRIPE_BRIGHTNESS;
-	stripe.setBrightness(ledStripBrightness);
-	Serial.println("Reset Position");
+	stripe.toggle();
+	Serial.println("Rotary encoder - Stripe toggled");
 }
 #pragma endregion
 
@@ -138,6 +211,123 @@ void handleRoot() {
 	busyLED.toggle();
 	server.server()->send(200, "text/plain", "WhiskyOne - Toggle Strip");
 	stripe.toggle();
+	busyLED.toggle();
+}
+
+void handelFullStripe()
+{
+	CRGB rgbcol;
+	CHSV hsvcol;
+	String temp = "";
+	String mess = "";
+	bool colchanged = false;
+
+	busyLED.toggle();
+	
+	// RGB Interpreting first
+
+	temp = server.server()->arg("r");
+
+	if (temp.length() > 0)
+	{
+		rgbcol.red = temp.toInt();
+		mess += "Red: " + temp;
+		colchanged = true;
+	}
+	else
+	{
+		rgbcol.red = 0;
+	}
+
+	temp = server.server()->arg("g");
+
+	if (temp.length() > 0)
+	{
+		rgbcol.green = temp.toInt();
+		mess += "Green: " + temp;
+		colchanged = true;
+	}
+	else
+	{
+		rgbcol.green = 0;
+	}
+		
+	temp = server.server()->arg("b");
+
+	if (temp.length() > 0)
+	{
+		rgbcol.blue = temp.toInt();
+		mess += "Blue: " + temp;
+		colchanged = true;
+	}
+	else
+	{
+		rgbcol.blue = 0;
+	}
+
+	// HSV only if no RGB is set
+
+	if (!colchanged)
+	{
+		temp = server.server()->arg("h");
+
+		if (temp.length() > 0)
+		{
+			hsvcol.hue = temp.toInt();
+			mess += "Hue " + temp;
+			colchanged = true;
+		}
+		else
+		{
+			hsvcol.hue = 0;
+		}
+
+		temp = server.server()->arg("s");
+
+		if (temp.length() > 0)
+		{
+			hsvcol.sat = temp.toInt();
+			mess += "Saturation: " + temp;
+			colchanged = true;
+		}
+		else
+		{
+			hsvcol.sat = 0;
+		}
+
+		temp = server.server()->arg("v");
+
+		if (temp.length() > 0)
+		{
+			hsvcol.val = temp.toInt();
+			mess += "Value: " + temp;
+			colchanged = true;
+		}
+		else
+		{
+			hsvcol.val = 0;
+		}
+
+		if (colchanged)
+			stripe.fullStripeHSV(hsvcol);
+	}
+	else
+		stripe.fullStripeRGB(rgbcol);
+
+	if (!colchanged)
+	{
+		rgbcol = stripe.getCurrColor();
+
+		mess += "Error no arguments recognized. No changes applied\n";
+		mess += "Current Color -> Red: " + String(rgbcol.r) + " Green: " + String(rgbcol.g) + " Blue: " + String(rgbcol.b);
+	}
+	else
+		currWifiColor = stripe.getCurrColor();
+		
+
+	mess = "WhiskyOne - FullStripe \n" + mess;
+
+	server.server()->send(200, "text/plain", mess);
 	busyLED.toggle();
 }
 

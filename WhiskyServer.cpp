@@ -41,7 +41,7 @@ void WhiskyServer::startMDNS(String name)
 	}
 
 	if (MDNS.begin(this->m_deviceName.c_str())) {
-		this->toSerial("MDNS responder started");
+		this->toSerial(String("MDNS responder started sending " + this->m_deviceName).c_str());
 	}
 	else
 	{
@@ -99,6 +99,8 @@ void WhiskyServer::checkWiFi()
 
 			this->m_tErrorBlink->disable();
 			this->m_firstConnect = false;
+			this->startMDNS();
+			this->startServer();
 		}
 		else if (this->m_tErrorBlink->isEnabled())
 		{

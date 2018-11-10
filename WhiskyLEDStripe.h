@@ -10,7 +10,7 @@
 #endif
 
 #ifndef PIN_LEDSTRIPE_DATA
-	#define PIN_LEDSTRIPE_DATA 5
+	#define PIN_LEDSTRIPE_DATA 3
 #endif // !#define PIN_LEDSTRIPE_DATA
 
 #ifndef DEFAULT_LEDSTRIPE_BRIGHTNESS
@@ -43,6 +43,10 @@ class WhiskyLEDStripe
 	bool isOn();
 
 	void update();
+
+	uint8_t getBrightness();
+
+	CRGB getCurrColor();
 
 protected:
 	CRGB*			m_LEDs;

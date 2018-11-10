@@ -89,3 +89,16 @@ void WhiskyLEDStripe::update()
 	FastLED.show();
 }
 
+uint8_t WhiskyLEDStripe::getBrightness()
+{
+	return FastLED.getBrightness();
+}
+
+CRGB WhiskyLEDStripe::getCurrColor()
+{
+	if (this->m_LEDs)
+		return this->m_LEDs[0];
+	else
+		return CRGB::Black;
+}
+
